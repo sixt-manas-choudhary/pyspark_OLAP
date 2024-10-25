@@ -1,0 +1,26 @@
+from pyspark.sql import SparkSession
+
+# Initialize Spark session
+spark = SparkSession.builder \
+    .appName("MigrationExample") \
+    .getOrCreate()
+
+# JDBC connection properties
+jdbc_url = "jdbc:postgresql://hostname:port/dbname"
+connection_properties = {
+    "user": "your_username",
+    "password": "your_password",
+    "driver": "org.postgresql.Driver"
+}
+
+# Load data from PostgreSQL
+source_df = spark.read.jdbc(url=jdbc_url, table="source_table", properties=connection_properties)
+
+# Transformation example: Filter, select, and rename columns
+transformed_df = source_df \
+    .filter(source_df['column_name'] > threshold_value) \
+    .select("column1", "column2", "column3") \
+    .withColumnRenamed("column3", "new_column_name")
+
+# Write transformed data to S3 in Parquet format
+transformed_df.write.mode("overwrite").parquet("s3a://bucket-name/destination-folder/")
